@@ -1,4 +1,13 @@
 import math
+import os
+import matplotlib.pyplot as plt
+import numpy as np
+import argparse
+import pickle
+
+parser = argparse.ArgumentParser(description='A tutorial of argparse!')
+parser.add_argument("--load", type=bool, default=False)
+args = parser.parse_args()
 
 def get_page_stats(pages):
     total_count = 0;
@@ -48,33 +57,100 @@ def get_page_reuse_distances(pages):
 
     return reuse_distances
 
+def avg_reuse_distances(reuse_distances):
+    Sum = 0
+    count = 0
+    for page in reuse_distances:
+        distances = reuse_distances[page]
+        Sum += sum(distances)
+        count += len(distances)
+    return Sum/count
+
+def save_list(data, filename):
+    with open(filename, "wb") as fp:
+        pickle.dump(data, fp)
+
+def load_list(filename):
+    with open(filename, "rb") as fp:   # Unpickling
+       return pickle.load(fp)
 
 
 # Page size in bytes
 PAGE_SIZE = 4096
 MASK_SIZE = math.log(PAGE_SIZE, 2)
 MASK = "0xfffffffff000"
-print(MASK_SIZE)
-f = open("pinatrace.out", "r")
-data = f.read().split("\n")
+filenames = []
+all_reuse_distances = []
 
-instructions = []
-access_types = []
-addresses = []
-pages = []
+if not args.load:
+    for filename in os.listdir('traces'):
+        print(filename)
+        filenames.append(filename)
+        f = open(os.path.join("traces", filename), "r")
+        data = f.read().split("\n")
 
-for row in data:
-    if(row != "#eof" and row!=""):
-        instance = row.split(' ')
-        instructions.append(instance[0][:-1])
-        access_types.append(instance[1])
-        addresses.append(instance[2])
-        page = int(instance[2], 16) & int(MASK, 16)
-        pages.append(hex(page))
+        instructions = []
+        access_types = []
+        addresses = []
+        pages = []
 
-page_counts, page_percentages = get_page_stats(pages)
-print_page_stats(page_counts, page_percentages)
+        for row in data:
+            if(row != "#eof" and row!=""):
+                
+                instance = row.split()
+                if(len(instance) != 3):
+                    print(row)
+                else:
+                    try:
+                        page = int(instance[2], 16) & int(MASK, 16)
 
-reuse_distances = get_page_reuse_distances(pages)
+                        instructions.append(instance[0][:-1])
+                        access_types.append(instance[1])
+                        addresses.append(instance[2])
+                        pages.append(hex(page))
+                    except:
+                        print(row)
 
-print(reuse_distances)
+        page_counts, page_percentages = get_page_stats(pages)
+        print_page_stats(page_counts, page_percentages)
+
+        reuse_distances = get_page_reuse_distances(pages)
+
+        print(reuse_distances)
+
+        
+
+        all_reuse_distances.append(reuse_distances)
+        
+    save_list(all_reuse_distances, "outputs/reuse_distances.txt")
+    save_list(filenames, "outputs/filenames.txt")
+else:
+    all_reuse_distances = load_list("outputs/reuse_distances.txt")
+    
+    filenames = load_list("outputs/filenames.txt")
+    
+final_stats = []
+
+for distance in all_reuse_distances:
+    avg = avg_reuse_distances(distance)
+    final_stats.append(avg)
+    print("Average Reuse Distance:")
+    print(avg)
+
+n_groups =  len(filenames)
+# create plot
+fig, ax = plt.subplots()
+index = np.arange(n_groups)
+bar_width = 0.35
+opacity = 0.8
+print(final_stats)
+rects = plt.bar(index, final_stats, bar_width, alpha=opacity, color='b', label='Avg Reuse Distances')
+
+plt.xlabel('File')
+plt.ylabel('Avg Distances')
+plt.title('Average Memory Reuse Distance for Spec2017 Test Suites')
+plt.xticks(index, (filenames[0], filenames[1]))
+plt.legend()
+
+plt.tight_layout()
+plt.show()
