@@ -83,10 +83,10 @@ filenames = []
 all_reuse_distances = []
 
 if not args.load:
-    for filename in os.listdir('traces'):
+    for filename in os.listdir('memtraces'):
         print(filename)
         filenames.append(filename)
-        f = open(os.path.join("traces", filename), "r")
+        f = open(os.path.join("memtraces", filename), "r")
         data = f.read().split("\n")
 
         instructions = []
