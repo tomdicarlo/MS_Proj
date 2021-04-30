@@ -1,9 +1,5 @@
 import math
 import os
-import matplotlib.pyplot as plt
-import numpy as np
-import argparse
-import pickle
 
 
 def get_page_reuse_distances(pages):
