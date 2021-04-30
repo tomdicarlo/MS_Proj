@@ -172,7 +172,7 @@ else:
         reuse_distance = load_list("reuse_distances/" + filename)
         page = load_list("pages/" + filename)
         all_reuse_distances.append(reuse_distance)
-        filenames.append(filename) 
+        filenames.append(filename[0:len(filename)-3]) 
         pages.append(page)
         
 
