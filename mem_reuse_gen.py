@@ -1,6 +1,7 @@
 import math
 import os
-
+from itertools import islice
+import time
 
 def get_page_reuse_distances(pages):
     page_accesses = {}
@@ -27,34 +28,75 @@ def get_page_reuse_distances(pages):
 PAGE_SIZE = 4096
 MASK_SIZE = math.log(PAGE_SIZE, 2)
 MASK = "0xfffffffff000"
-
+# MAX NUM OF BYTES TO BE READ AT A SINGLE TIME
+MAX_READ_SIZE = 100000
 def get_mem_reuse(filename):
-
-    f = open(os.path.join("memtraces", filename), "r")
-    data = f.read().split("\n")
-
-    instructions = []
-    access_types = []
-    addresses = []
-    pages = []
-
-    for row in data:
-        if(row != "#eof" and row!=""):
+    start_time = time.perf_counter()
+    with open(filename, 'rb') as f:
+        access_count = 0
+        reuse_sizes = [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0]
+        reused_pages = {}
+        page_accesses = {}
+        cumulative_reuse_distance = 0
+        bad_access_counts = 0
+        file_size = os.path.getsize(filename)
+        num_bytes_read = 0
+        for lines in iter(lambda: tuple(islice(f, MAX_READ_SIZE)), ()):
             
-            instance = row.split()
-            if(len(instance) != 3):
-                print(row)
-            else:
-                try:
-                    page = int(instance[2], 16) & int(MASK, 16)
+            for line in lines:
+            
+                if(line != "#eof" and line!=""):
+                    
+                    instance = line.split()
+                    if(len(instance) == 3):
+                            page = -1
+                            num_bytes_read += len(instance)
+                            try:
+                                page = int(instance[2], 16) & int(MASK, 16)
+                            except:
+                                bad_access_counts += 1
+                            if(page !=-1):
+                                access_count += 1
+                                if page in reused_pages:
+                                    if not reused_pages[page]:
+                                        reused_pages[page] = True
+                                else:
+                                    reused_pages[page] = False
+                                if page in page_accesses:
+                                    reuse_distance = len(page_accesses[page])
+                                    cumulative_reuse_distance += reuse_distance
+                                    for i in range(0, 20):
+                                        if reuse_distance >= 2**i:
+                                            reuse_sizes[i] += 1
+                                        else:
+                                            break
 
-                    instructions.append(instance[0][:-1])
-                    access_types.append(instance[1])
-                    addresses.append(instance[2])
-                    pages.append(hex(page))
-                except:
-                    print(row)
+                                page_accesses[page] = {}
+                                
+                                    #REUSE SIZES
+                                for access_record in page_accesses:
+                                    if access_record != page:
+                                        page_accesses[access_record][page] = True
+            print("Starting new batch")
+            percent = num_bytes_read/file_size*1000
+            print(str(percent) + "% of bytes read so far")
+            curr_time = time.perf_counter()
+            print(str(((curr_time-start_time)/(percent/100))*(1-(percent/100))) + " estimated seconds remaining\n")
+    avg_reuse_distance = cumulative_reuse_distance/access_count
+    reaccessed = 0
+    accessed = 0
+    for key, value in reused_pages.items():
+        if value:
+            reaccessed += 1
+        accessed += 1
+    page_reuse_percentage = reaccessed/accessed
 
-    reuse_distances = get_page_reuse_distances(pages)
+    cdfs = [(access_count-num) / access_count for num in reuse_sizes]
 
-    return pages, reuse_distances
+    print("Stats for " + filename[0:len(filename)-3])
+    print("Average Reuse Distance:" + str(avg_reuse_distance))
+    print("Page Reuse Percentage:" + str(page_reuse_percentage))
+    print("CDFS:" + str(cdfs))
+    print("Percentage of Bad Memory Addressed Provided By Tool:" + str(bad_access_counts/(bad_access_counts + access_count)))
+    print("Total Seconds Elapsed: " + str(time.perf_counter()-start_time) + "\n")
+    return avg_reuse_distance, page_reuse_percentage, cdfs
