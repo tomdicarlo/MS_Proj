@@ -19,6 +19,8 @@ def get_mem_reuse(filename):
     with open(filename, 'rb') as f:
         access_count = 0
         reuse_sizes = [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0]
+        # We are pre-calculating these values since they are fixed to save time
+        reuse_barriers = [2**0, 2**1, 2**2, 2**3, 2**4, 2**5, 2**6, 2**7, 2**8, 2**9, 2**10, 2**11, 2**12, 2**13, 2**14, 2**15, 2**16, 2**17, 2**18, 2**19]
         reused_pages = {}
         page_accesses = []
         cumulative_reuse_distance = 0
@@ -49,12 +51,18 @@ def get_mem_reuse(filename):
                                 if page in page_accesses:
                                     reuse_distance = page_accesses.index(page)
                                     cumulative_reuse_distance += reuse_distance
-                                    for i in range(0, 20):
-                                        if reuse_distance >= 2**i:
+                                    i = 0
+                                    for val in reuse_barriers:
+                                        if reuse_distance >= val:
                                             reuse_sizes[i] += 1
                                         else:
                                             break
+                                        i+=1
                                     page_accesses.remove(page)
+
+                                
+                                
+                                #REUSE SIZES
                                 
                                 page_accesses.insert(0, page)
 
