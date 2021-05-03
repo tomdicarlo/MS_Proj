@@ -114,8 +114,8 @@ def main():
             filenames.append(filename)
 
     else:
-        for filename in os.listdir('Stats'):
-            data = load_list("Stats/" + filename)
+        for filename in os.listdir('stats'):
+            data = load_list("stats/" + filename)
             all_avg_reuse_distances.append(data[0])
             all_reuse_percentages.append(data[1])
             all_cdfs.append(data[2])

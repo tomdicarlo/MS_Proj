@@ -3,6 +3,8 @@ import os
 from itertools import islice
 import time
 from collections import defaultdict, deque
+import llist
+
 
 # Page size in bytes
 PAGE_SIZE = 4096
@@ -34,6 +36,7 @@ def get_mem_reuse(filename):
                     except:
                         bad_access_counts += 1
                         continue
+                    # Potential Optimization: Get a deque that is capable of removing a value if it exists, and returning it's index, unless it doesn't exist
                     if page in page_accesses:
                         reuse_distance = page_accesses.index(page)
                         reuse_size_counts[reuse_distance] += 1
