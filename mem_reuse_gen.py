@@ -13,6 +13,7 @@ MASK = "0xfffffffff000"
 # MAX NUM OF BYTES TO BE READ AT A SINGLE TIME
 MAX_READ_SIZE = 100000
 
+#@profile
 def get_mem_reuse(filename):
     start_time = time.perf_counter()
     with open(filename, 'rb') as f:
@@ -46,12 +47,7 @@ def get_mem_reuse(filename):
                                 else:
                                     reused_pages[page] = False
                                 if page in page_accesses:
-                                    reuse_distance = 0
-                                    for new_page in page_accesses:
-                                        if page!= new_page:
-                                            reuse_distance +=1
-                                        else:
-                                            break
+                                    reuse_distance = page_accesses.index(page)
                                     cumulative_reuse_distance += reuse_distance
                                     for i in range(0, 20):
                                         if reuse_distance >= 2**i:
@@ -59,10 +55,6 @@ def get_mem_reuse(filename):
                                         else:
                                             break
                                     page_accesses.remove(page)
-
-                                
-                                
-                                #REUSE SIZES
                                 
                                 page_accesses.insert(0, page)
 

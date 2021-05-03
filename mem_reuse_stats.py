@@ -102,6 +102,7 @@ def main():
                 all_avg_reuse_distances.append(avg_reuse_distance)
                 all_reuse_percentages.append(page_reuse_percentage)
                 all_cdfs.append(cdfs)
+                filenames.append(filename)
         else:
             filename = args.target
             avg_reuse_distance, page_reuse_percentage, cdfs = get_mem_reuse(filename)
