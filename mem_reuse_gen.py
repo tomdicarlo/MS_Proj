@@ -3,25 +3,8 @@ import os
 from itertools import islice
 import time
 
-def get_page_reuse_distances(pages):
-    page_accesses = {}
-    reuse_distances = {}
-    for page in pages:
-        if not page in page_accesses:
-            page_accesses[page] = []
-        else:
-            reuse_distance = len(page_accesses[page])
-            if not page in reuse_distances:
-                reuse_distances[page] = []
-
-            reuse_distances[page].append(reuse_distance)
-            page_accesses[page] = []
-
-        for access_record in page_accesses:
-            if access_record != page and page not in page_accesses[access_record]:
-                page_accesses[access_record].append(page)
-
-    return reuse_distances
+#import heartrate 
+#heartrate.trace(browser=True)
 
 
 # Page size in bytes
@@ -30,6 +13,7 @@ MASK_SIZE = math.log(PAGE_SIZE, 2)
 MASK = "0xfffffffff000"
 # MAX NUM OF BYTES TO BE READ AT A SINGLE TIME
 MAX_READ_SIZE = 100000
+
 def get_mem_reuse(filename):
     start_time = time.perf_counter()
     with open(filename, 'rb') as f:
@@ -37,6 +21,7 @@ def get_mem_reuse(filename):
         reuse_sizes = [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0]
         reused_pages = {}
         page_accesses = {}
+        #indirection_table = {}
         cumulative_reuse_distance = 0
         bad_access_counts = 0
         file_size = os.path.getsize(filename)
@@ -63,7 +48,7 @@ def get_mem_reuse(filename):
                                 else:
                                     reused_pages[page] = False
                                 if page in page_accesses:
-                                    reuse_distance = len(page_accesses[page])
+                                    reuse_distance = len(page_accesses[page]) -1
                                     cumulative_reuse_distance += reuse_distance
                                     for i in range(0, 20):
                                         if reuse_distance >= 2**i:
@@ -73,10 +58,10 @@ def get_mem_reuse(filename):
 
                                 page_accesses[page] = {}
                                 
-                                    #REUSE SIZES
+                                #REUSE SIZES
                                 for access_record in page_accesses:
-                                    if access_record != page:
-                                        page_accesses[access_record][page] = True
+                                    page_accesses[access_record][page] = True
+
             print("Starting new batch")
             percent = num_bytes_read/file_size*1000
             print(str(percent) + "% of bytes read so far")
