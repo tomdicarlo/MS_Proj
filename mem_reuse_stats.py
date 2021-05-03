@@ -81,47 +81,50 @@ def graph_reuse_distances(filename, cdfs):
     plt.close()
 
 
-# Page size in bytes
-PAGE_SIZE = 4096
-MASK_SIZE = math.log(PAGE_SIZE, 2)
-MASK = "0xfffffffff000"
-filenames = []
-all_avg_reuse_distances = []
-all_reuse_percentages = []
-all_cdfs = []
-pages = []
-page_reuse_percentages = []
-if not args.load:
-    if not args.target:
-        for filename in os.listdir('memtraces'):
-            
-            avg_reuse_distance, page_reuse_percentage, cdfs = get_mem_reuse(os.path.join("memtraces", filename))
-            save_list((avg_reuse_distance, page_reuse_percentage, cdfs), "stats/" + filename)
+def main():
+    # Page size in bytes
+    PAGE_SIZE = 4096
+    MASK_SIZE = math.log(PAGE_SIZE, 2)
+    MASK = "0xfffffffff000"
+    filenames = []
+    all_avg_reuse_distances = []
+    all_reuse_percentages = []
+    all_cdfs = []
+    pages = []
+    page_reuse_percentages = []
+    if not args.load:
+        if not args.target:
+            for filename in os.listdir('memtraces'):
+                
+                avg_reuse_distance, page_reuse_percentage, cdfs = get_mem_reuse(os.path.join("memtraces", filename))
+                save_list((avg_reuse_distance, page_reuse_percentage, cdfs), "stats/" + filename)
+
+                all_avg_reuse_distances.append(avg_reuse_distance)
+                all_reuse_percentages.append(page_reuse_percentage)
+                all_cdfs.append(cdfs)
+        else:
+            filename = args.target
+            avg_reuse_distance, page_reuse_percentage, cdfs = get_mem_reuse(filename)
+            save_list((avg_reuse_distance, page_reuse_percentage, cdfs), "stats/" + os.path.basename(filename))
 
             all_avg_reuse_distances.append(avg_reuse_distance)
             all_reuse_percentages.append(page_reuse_percentage)
             all_cdfs.append(cdfs)
+            filenames.append(filename)
+
     else:
-        filename = args.target
-        avg_reuse_distance, page_reuse_percentage, cdfs = get_mem_reuse(filename)
-        save_list((avg_reuse_distance, page_reuse_percentage, cdfs), "stats/" + os.path.basename(filename))
+        for filename in os.listdir('Stats'):
+            data = load_list("Stats/" + filename)
+            all_avg_reuse_distances.append(data[0])
+            all_reuse_percentages.append(data[1])
+            all_cdfs.append(data[2])
+            filenames.append(filename[0:len(filename)-3])
+            
+    create_reuse_percent_plot(filenames, all_reuse_percentages)
+    create_avg_reuse_distance_plot(filenames, all_avg_reuse_distances)
 
-        all_avg_reuse_distances.append(avg_reuse_distance)
-        all_reuse_percentages.append(page_reuse_percentage)
-        all_cdfs.append(cdfs)
-        filenames.append(filename)
-
-else:
-    for filename in os.listdir('Stats'):
-        data = load_list("Stats/" + filename)
-        all_avg_reuse_distances.append(data[0])
-        all_reuse_percentages.append(data[1])
-        all_cdfs.append(data[2])
-        filenames.append(filename[0:len(filename)-3])
+    for cdfs in all_cdfs:
+        graph_reuse_distances(filename, cdfs)
         
-create_reuse_percent_plot(filenames, all_reuse_percentages)
-create_avg_reuse_distance_plot(filenames, all_avg_reuse_distances)
-
-for cdfs in all_cdfs:
-    graph_reuse_distances(filename, cdfs)
-    
+if __name__ == "__main__":
+    main()

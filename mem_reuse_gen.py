@@ -2,7 +2,6 @@ import math
 import os
 from itertools import islice
 import time
-
 #import heartrate 
 #heartrate.trace(browser=True)
 
@@ -20,8 +19,7 @@ def get_mem_reuse(filename):
         access_count = 0
         reuse_sizes = [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0]
         reused_pages = {}
-        page_accesses = {}
-        #indirection_table = {}
+        page_accesses = []
         cumulative_reuse_distance = 0
         bad_access_counts = 0
         file_size = os.path.getsize(filename)
@@ -48,25 +46,32 @@ def get_mem_reuse(filename):
                                 else:
                                     reused_pages[page] = False
                                 if page in page_accesses:
-                                    reuse_distance = len(page_accesses[page]) -1
+                                    reuse_distance = 0
+                                    for new_page in page_accesses:
+                                        if page!= new_page:
+                                            reuse_distance +=1
+                                        else:
+                                            break
                                     cumulative_reuse_distance += reuse_distance
                                     for i in range(0, 20):
                                         if reuse_distance >= 2**i:
                                             reuse_sizes[i] += 1
                                         else:
                                             break
+                                    page_accesses.remove(page)
 
-                                page_accesses[page] = {}
+                                
                                 
                                 #REUSE SIZES
-                                for access_record in page_accesses:
-                                    page_accesses[access_record][page] = True
+                                
+                                page_accesses.insert(0, page)
 
             print("Starting new batch")
             percent = num_bytes_read/file_size*1000
             print(str(percent) + "% of bytes read so far")
             curr_time = time.perf_counter()
             print(str(((curr_time-start_time)/(percent/100))*(1-(percent/100))) + " estimated seconds remaining\n")
+
     avg_reuse_distance = cumulative_reuse_distance/access_count
     reaccessed = 0
     accessed = 0
