@@ -19,9 +19,6 @@ def get_mem_reuse(filename):
     start_time = time.perf_counter()
     with open(filename, 'rb') as f:
         access_count = 0
-        reuse_sizes = [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0]
-        # We are pre-calculating these values since they are fixed to save time
-        reuse_barriers = [2**0, 2**1, 2**2, 2**3, 2**4, 2**5, 2**6, 2**7, 2**8, 2**9, 2**10, 2**11, 2**12, 2**13, 2**14, 2**15, 2**16, 2**17, 2**18, 2**19]
         reused_pages = {}
         reuse_size_counts = defaultdict(int)
         page_accesses = []
@@ -48,9 +45,8 @@ def get_mem_reuse(filename):
                         reused_pages[page] = False
                     if page in page_accesses:
                         reuse_distance = page_accesses.index(page)
-                        cumulative_reuse_distance += reuse_distance
                         reuse_size_counts[reuse_distance] += 1
-                        page_accesses.remove(page)
+                        page_accesses.pop(reuse_distance)
                     
                     page_accesses.insert(0, page)
 
@@ -60,7 +56,9 @@ def get_mem_reuse(filename):
             curr_time = time.perf_counter()
             print(str(((curr_time-start_time)/(percent/100))*(1-(percent/100))) + " estimated seconds remaining\n")
 
-    avg_reuse_distance = cumulative_reuse_distance/access_count
+    reuse_sizes = [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0]
+    # We are pre-calculating these values since they are fixed to save time
+    reuse_barriers = [2**0, 2**1, 2**2, 2**3, 2**4, 2**5, 2**6, 2**7, 2**8, 2**9, 2**10, 2**11, 2**12, 2**13, 2**14, 2**15, 2**16, 2**17, 2**18, 2**19]
     reaccessed = 0
     accessed = 0
     for key, value in reused_pages.items():
@@ -70,6 +68,7 @@ def get_mem_reuse(filename):
     page_reuse_percentage = reaccessed/accessed
 
     for val in reuse_size_counts:
+        cumulative_reuse_distance += val*reuse_size_counts[val]
         i = 0
         for barrier in reuse_barriers:
             if val >= barrier:
@@ -77,6 +76,10 @@ def get_mem_reuse(filename):
             else:
                 break
             i+=1
+
+    avg_reuse_distance = cumulative_reuse_distance/access_count
+
+
     cdfs = [(access_count-num) / access_count for num in reuse_sizes]
 
     print("Stats for " + filename[0:len(filename)-3])
