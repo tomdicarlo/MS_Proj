@@ -42,7 +42,7 @@ def create_reuse_percent_plot(filenames, reuse_percentages):
 
     plt.tight_layout()
     plt.savefig('graphs/reuse_percent')    
-    if(args.show_graph):
+    if(args.show_graphs):
         plt.show()
     else:
         plt.close()
@@ -66,7 +66,7 @@ def create_avg_reuse_distance_plot(filenames, all_avg_reuse_distances):
 
     plt.tight_layout()
     plt.savefig('graphs/avg_reuse')    
-    if(args.show_graph):
+    if(args.show_graphs):
         plt.show()
     else:
         plt.close()
@@ -87,7 +87,7 @@ def graph_reuse_distances(filename, cdfs):
 
     plt.tight_layout()
     plt.savefig('graphs/' + str(filename) + ".png")    
-    if(args.show_graph):
+    if(args.show_graphs):
         plt.show()
     else:
         plt.close()
