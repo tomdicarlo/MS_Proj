@@ -3,8 +3,11 @@ import os
 from itertools import islice
 import time
 from collections import defaultdict, deque
-import llist
+import pickle
 
+def save_list(data, filename):
+    with open(filename, "wb") as fp:
+        pickle.dump(data, fp)
 
 # Page size in bytes
 PAGE_SIZE = 4096
@@ -29,19 +32,18 @@ def get_mem_reuse(filename):
             approx_num_bytes_read += len(lines)*(len(lines[0]) + len(lines[1]) + len(lines[2]) + len(lines[3]) + len(lines[4]))/5
 
             for line in lines:
-
                     instance = line.split()
                     try:
                         page = int(instance[2], 16) & MASK
                     except:
                         bad_access_counts += 1
                         continue
-                    # Potential Optimization: Get a deque that is capable of removing a value if it exists, and returning it's index, unless it doesn't exist
-                    if page in page_accesses:
+                    if page in reaccessed_pages or page in page_accesses:
                         reuse_distance = page_accesses.index(page)
                         reuse_size_counts[reuse_distance] += 1
                         page_accesses.remove(page)
                         reaccessed_pages[page] = True
+
                     page_accesses.appendleft(page)
 
             print("Starting new batch")
@@ -74,11 +76,11 @@ def get_mem_reuse(filename):
 
     cdfs = [(true_access_count-num) / true_access_count for num in reuse_sizes]
 
+    save_list((avg_reuse_distance, page_reuse_percentage, cdfs), "stats/" + os.path.basename(filename))
+
     print("Stats for " + filename[0:len(filename)-3])
     print("Average Reuse Distance:" + str(avg_reuse_distance))
     print("Page Reuse Percentage:" + str(page_reuse_percentage))
     print("CDFS:" + str(cdfs))
     print("Percentage of Bad Memory Addressed Provided By Tool:" + str(bad_access_counts/(bad_access_counts + access_count)))
     print("Total Seconds Elapsed: " + str(time.perf_counter()-start_time) + "\n")
-
-    return avg_reuse_distance, page_reuse_percentage, cdfs

@@ -5,10 +5,13 @@ import numpy as np
 import argparse
 import pickle
 from mem_reuse_gen import get_mem_reuse
+from multiprocessing import Pool
 
 parser = argparse.ArgumentParser(description='A tutorial of argparse!')
 parser.add_argument("--load", type=bool, default=False)
 parser.add_argument("--target", type=str)
+parser.add_argument("--processes", type=int, default=1)
+
 args = parser.parse_args()
 
 def save_list(data, filename):
@@ -94,32 +97,23 @@ def main():
     page_reuse_percentages = []
     if not args.load:
         if not args.target:
-            for filename in os.listdir('memtraces'):
-                
-                avg_reuse_distance, page_reuse_percentage, cdfs = get_mem_reuse(os.path.join("memtraces", filename))
-                save_list((avg_reuse_distance, page_reuse_percentage, cdfs), "stats/" + filename)
-
-                all_avg_reuse_distances.append(avg_reuse_distance)
-                all_reuse_percentages.append(page_reuse_percentage)
-                all_cdfs.append(cdfs)
-                filenames.append(filename)
+            if args.processes == 1:
+                for filename in os.listdir('memtraces'):
+                    get_mem_reuse(os.path.join("memtraces", filename))
+            else:
+                with Pool(args.processes) as p:
+                    p.map(get_mem_reuse, [os.path.join("memtraces", filename) for filename in os.listdir('memtraces')])
         else:
             filename = args.target
-            avg_reuse_distance, page_reuse_percentage, cdfs = get_mem_reuse(filename)
-            save_list((avg_reuse_distance, page_reuse_percentage, cdfs), "stats/" + os.path.basename(filename))
+            get_mem_reuse(filename)
 
-            all_avg_reuse_distances.append(avg_reuse_distance)
-            all_reuse_percentages.append(page_reuse_percentage)
-            all_cdfs.append(cdfs)
-            filenames.append(filename)
 
-    else:
-        for filename in os.listdir('stats'):
-            data = load_list("stats/" + filename)
-            all_avg_reuse_distances.append(data[0])
-            all_reuse_percentages.append(data[1])
-            all_cdfs.append(data[2])
-            filenames.append(filename[0:len(filename)-3])
+    for filename in os.listdir('stats'):
+        data = load_list("stats/" + filename)
+        all_avg_reuse_distances.append(data[0])
+        all_reuse_percentages.append(data[1])
+        all_cdfs.append(data[2])
+        filenames.append(filename[0:len(filename)-3])
             
     create_reuse_percent_plot(filenames, all_reuse_percentages)
     create_avg_reuse_distance_plot(filenames, all_avg_reuse_distances)
