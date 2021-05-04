@@ -11,6 +11,7 @@ parser = argparse.ArgumentParser(description='A tutorial of argparse!')
 parser.add_argument("--load", type=bool, default=False)
 parser.add_argument("--target", type=str)
 parser.add_argument("--processes", type=int, default=1)
+parser.add_argument("--show_graphs", type=bool, default=False)
 
 args = parser.parse_args()
 
@@ -41,8 +42,10 @@ def create_reuse_percent_plot(filenames, reuse_percentages):
 
     plt.tight_layout()
     plt.savefig('graphs/reuse_percent')    
-    plt.show()
-
+    if(args.show_graph):
+        plt.show()
+    else:
+        plt.close()
 def create_avg_reuse_distance_plot(filenames, all_avg_reuse_distances):
     n_groups =  len(filenames)
     # create plot
@@ -63,7 +66,10 @@ def create_avg_reuse_distance_plot(filenames, all_avg_reuse_distances):
 
     plt.tight_layout()
     plt.savefig('graphs/avg_reuse')    
-    plt.show()
+    if(args.show_graph):
+        plt.show()
+    else:
+        plt.close()
 
 def graph_reuse_distances(filename, cdfs):
     n_groups =  len( range(0, 20))
@@ -81,7 +87,10 @@ def graph_reuse_distances(filename, cdfs):
 
     plt.tight_layout()
     plt.savefig('graphs/' + str(filename) + ".png")    
-    plt.close()
+    if(args.show_graph):
+        plt.show()
+    else:
+        plt.close()
 
 
 def main():
