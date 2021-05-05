@@ -1,6 +1,6 @@
 Hello! In this readme I'll walk you through how to use my memtrace generating program, as well as how to generate memtraces like these on your own.
 
-Getting the Memtraces:
+Setting up Spec2017 on Pitt Linux Clusters:
 
 For generating the memtraces, I will assume you are working on the pitt linux clusters
 
@@ -24,23 +24,34 @@ From here, cd into the spec directory. You will need to create a configuration f
 
 cd /home/my_dir/spec/config
 Your new config file needs to make a few changes to have everything ready to run, we will base ours off of Example-gcc-linux-x86
-cp Example-gcc-linux-x86.cfg try1.cfg
+cp Example-gcc-linux-x86.cfg SpecConfig.cfg
 
 You'll need to set the gcc directory to /.
 You'll also need to remove the -fno-tree-loop-vectorize flag
+You will also need to add a reference to the Pin tool to access the memory information.
+I have done all of these steps in SpecConfig.cfg(though you will need to update your Pin path, since it will be stored in a different directory)\
 
 From here, everything should be set up to build and run your SPEC test suites
+
+Lastly, you will want to copy over the provided myPinatrace.cpp into pin/source/tools/ManualExamples, and then run make
+This new tool will generate the memory access statistics as the SPEC test suite runs, as opposed to creating massive(over 1 TB per benchmark) memory trace file, which then still needs to be processed
+
 For convenience, I've created a script, runpin.sh, that will iterate through each of the SPEC test suites, build them, run them with PIN, and then copy the memtrace files into a new directory
 Copy this script into /spec/bin, and you should be able to run it from there.
-Make sure to update the script to include the path to your Pin directory, as well as the target directory
+Make sure to update the script to include the path to your Pin directory
+There could be ways to optimize this process by running each benchmark concurrently, though I did not have time to fully investigate this
+Once a benchmark finishing running, the output file, pinatrace.out, should be visible in spec/benchspec/CPU/(Chosen-Benchmark)/run/(Most recent run)/pinatrace.out
 
-Using memtraces to get reuse distance statistics:
-Now that we have our memory traces, we're almost done. 
+These files hold all of the relevant memory access statistics, which can be analyzed directly or made into graphs
 
-Simply copy all of the memtraces that you would like to generate statistics for into the memtraces directory
-Then, run mem_reuse_stats.py in order to generate reuse distances across the memory trace file
+Python Scripts:
+
+If you generated the memory traces directly, simply copy all of the memtraces that you would like to generate statistics for into the memtraces directory
+Then, run mem_reuse_stats.py in order to generate reuse distances across the memory trace file(this will likely be very slow, like a day or two)
 
 It will automatically produce several graphs displaying statistics regarding the generated reuse distances
+
+Alternatively, if you generated the relevant memory statistics directly, copy output files into the memory_stats directory, and you can then run mem_reuse_stats.py 
 
 If you have any questions about setting up SPEC or working with python code provided, please feel free to reach out to me at tmd62@pitt.edu
 

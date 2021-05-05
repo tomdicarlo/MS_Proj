@@ -23,7 +23,6 @@ def get_mem_reuse(filename):
         reaccessed_pages = {}
         reuse_size_counts = defaultdict(int)
         page_accesses = deque()
-        cumulative_reuse_distance = 0
         bad_access_counts = 0
         file_size = os.path.getsize(filename)
         approx_num_bytes_read = 0
@@ -56,6 +55,7 @@ def get_mem_reuse(filename):
     reuse_barriers = [2**0, 2**1, 2**2, 2**3, 2**4, 2**5, 2**6, 2**7, 2**8, 2**9, 2**10, 2**11, 2**12, 2**13, 2**14, 2**15, 2**16, 2**17, 2**18, 2**19]
     reaccessed = len(reaccessed_pages)
     accessed = len(page_accesses)
+    cumulative_reuse_distance = 0
 
     true_access_count = access_count - bad_access_counts
 
@@ -79,8 +79,8 @@ def get_mem_reuse(filename):
     save_list((avg_reuse_distance, page_reuse_percentage, cdfs), "stats/" + os.path.basename(filename))
 
     print("Stats for " + filename[0:len(filename)-3])
-    print("Average Reuse Distance:" + str(avg_reuse_distance))
-    print("Page Reuse Percentage:" + str(page_reuse_percentage))
-    print("CDFS:" + str(cdfs))
-    print("Percentage of Bad Memory Addressed Provided By Tool:" + str(bad_access_counts/(bad_access_counts + access_count)))
+    print("Average Reuse Distance: " + str(avg_reuse_distance))
+    print("Page Reuse Percentage: " + str(page_reuse_percentage))
+    print("CDFS: " + str(cdfs))
+    print("Percentage of Bad Memory Addressed Provided By Tool: " + str(bad_access_counts/(bad_access_counts + access_count)))
     print("Total Seconds Elapsed: " + str(time.perf_counter()-start_time) + "\n")

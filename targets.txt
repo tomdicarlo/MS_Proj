@@ -1,0 +1,2 @@
+./memtraces/500.perlbench_r.mt
+./memtraces/502.gcc_r.mt

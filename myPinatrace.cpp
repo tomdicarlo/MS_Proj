@@ -129,12 +129,8 @@ VOID Fini(INT32 code, VOID *v)
     float avg_reuse_distance = (float)cumulative_reuse_distance/(float)access_count;
 
 
-    fprintf(trace, "Total Number of Memory Accesses:%lu\n", access_count);
-    fprintf(trace, "Total Number of Unique Page Uses:%lu\n", page_accesses.size());
-    fprintf(trace, "Total Number of Page Reacceses:%lu\n", reaccessed_pages.size());
+    fprintf(trace, "Average Reuse Distance: %f\n", avg_reuse_distance);    
     fprintf(trace, "Page Reuse Percentage: %f\n", page_reuse_percentage);
-    fprintf(trace, "Average Reuse Distance: %f\n", avg_reuse_distance);
-    fprintf(trace, "CDFS: 0-19\n");
     for(int i=0; i<20;i++){
 	float cdf = (access_count -reuse_sizes[i])/(float)access_count;
 	fprintf(trace, "%f\n", cdf);

@@ -5,11 +5,6 @@ declare -a FILE=("500.perlbench_r" "502.gcc_r" "505.mcf_r" "520.omnetpp_r" "523.
 PIN = "/afs/pitt.edu/home/t/m/tmd62/private/pin"
 OUTPUT_DIR = "/afs/cs.pitt.edu/usr0/tmd62/public/memtraces"
 for FILE in "${FILE[@]}"; do
-./runcpu --config=try1 --action=build $FILE
-$PIN -follow_execv -t $PIN/source/tools/ManualExamples/obj-intel64/pinatrace.so -- ./runcpu --config=try1 --action=run $FILE
-
-cp pinatrace.out $OUTPUT_DIR/$FILE.mt
-
-rm pinatrace.out
-
+./runcpu --config=SpecConfig --action=build $FILE
+./runcpu --config=SpecConfig --action=onlyrun $FILE
 done

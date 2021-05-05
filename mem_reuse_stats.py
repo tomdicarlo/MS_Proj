@@ -12,7 +12,7 @@ parser.add_argument("--load", type=bool, default=False)
 parser.add_argument("--target", type=str)
 parser.add_argument("--processes", type=int, default=1)
 parser.add_argument("--show_graphs", type=bool, default=False)
-
+parser.add_argument("--direct_load", type=bool, default=True)
 args = parser.parse_args()
 
 def save_list(data, filename):
@@ -104,6 +104,17 @@ def main():
     all_cdfs = []
     pages = []
     page_reuse_percentages = []
+    if args.direct_load:
+        for filename in os.listdir('memory_stats'):
+            with open(os.path.join("memory_stats", filename), 'rb') as f:
+                lines = f.readlines()
+                avg_reuse_distance = float(lines[0])
+                page_reuse_percent = float(lines[1])
+                cdfs =[]
+                for line in lines[2:len(lines)]:
+                    cdfs.append(float(line))
+                save_list((avg_reuse_distance, page_reuse_percent, cdfs), "stats/" + os.path.basename(filename) +".mt")
+
     if not args.load:
         if not args.target:
             if args.processes == 1:
@@ -113,8 +124,16 @@ def main():
                 with Pool(args.processes) as p:
                     p.map(get_mem_reuse, [os.path.join("memtraces", filename) for filename in os.listdir('memtraces')])
         else:
-            filename = args.target
-            get_mem_reuse(filename)
+            with open(args.target, 'r') as f:
+                target_filenames = f.readlines()
+                target_filenames = [x.strip() for x in target_filenames] 
+
+                if args.processes == 1:
+                    for filename in target_filenames:
+                        get_mem_reuse(filename)
+                else:
+                    with Pool(args.processes) as p:
+                        p.map(get_mem_reuse, target_filenames)
 
 
     for filename in os.listdir('stats'):
@@ -127,8 +146,10 @@ def main():
     create_reuse_percent_plot(filenames, all_reuse_percentages)
     create_avg_reuse_distance_plot(filenames, all_avg_reuse_distances)
 
+    i = 0
     for cdfs in all_cdfs:
-        graph_reuse_distances(filename, cdfs)
+        graph_reuse_distances(filenames[i], cdfs)
+        i+=1
         
 if __name__ == "__main__":
     main()
